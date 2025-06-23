@@ -1,4 +1,3 @@
-````markdown
 # Appointment Scheduling API
 
 This is a RESTful API built with Laravel for managing appointments and reminders between clients and service providers, i.e. users. It supports time zone-aware scheduling, automated reminders, and recurring appointments.
@@ -16,7 +15,7 @@ This is a RESTful API built with Laravel for managing appointments and reminders
 
 ## 🛠️ Setup
 
-```bash
+```
 git clone https://github.com/killedit/2025-06-18-appointment-reminder-system.git
 cd 2025-06-18-appointment-reminder-system
 
@@ -24,11 +23,11 @@ composer install
 php artisan key:generate
 php artisan migrate
 php artisan serve
-````
+```
 
 To run jobs:
 
-```bash
+```
 php artisan queue:work
 ```
 
@@ -175,5 +174,3 @@ You can test the API using Postman:
 - 🌐 [Download Environment File](postman/2025-06-18-appointment-reminder-system.postman_environment.json)
 
 > Import both into Postman to get started quickly.
-
-```
