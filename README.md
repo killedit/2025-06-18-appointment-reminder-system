@@ -1,61 +1,179 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+````markdown
+# Appointment Scheduling API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is a RESTful API built with Laravel for managing appointments and reminders between clients and service providers, i.e. users. It supports time zone-aware scheduling, automated reminders, and recurring appointments.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- User registration & login (Sanctum token-based auth)
+- Create, update, delete appointments
+- Schedule automated simulation reminders with offsets (e.g. -1 hour, -1 day)
+- Supports recurring appointments (weekly, monthly)
+- Time zone conversion middleware
+- Reminder queue job system
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Setup
 
-## Learning Laravel
+```bash
+git clone https://github.com/killedit/2025-06-18-appointment-reminder-system.git
+cd 2025-06-18-appointment-reminder-system
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+composer install
+php artisan key:generate
+php artisan migrate
+php artisan serve
+````
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+To run jobs:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+php artisan queue:work
+```
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🔐 Authentication
 
-### Premium Partners
+This API uses [Laravel Sanctum](https://laravel.com/docs/11.x/sanctum) for token-based authentication.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### RegisterUser
 
-## Contributing
+**POST** `/api/register`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password",
+  "password_confirmation": "password"
+}
+```
 
-## Code of Conduct
+### GenerateUserToken
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**POST** `/api/getToken`
 
-## Security Vulnerabilities
+```json
+{
+  "email": "john@example.com",
+  "password": "password"
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Returns:
 
-## License
+```json
+{
+    "access_token": "10|nyotofKWPLYtHh61ATrpX5no62TVPGYm9Mjazid91ecfb664",
+    "token_type": "Bearer",
+    "expires_in": 900
+}
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Pass the token in the `Authorization` header:
+
+```
+Authorization: Bearer {{access_token}}
+```
+
+---
+
+## 📚 Endpoints
+
+### Users
+
+| Method | URI           | Controller                           | Description              |
+| ------ | ------------- | ------------------------------------ | ------------------------ |
+| POST   | /api/register | RegisteredUserController\@store      | Register new user        |
+| POST   | /api/getToken | RegisteredUserController\@getToken   | Login and get auth token |
+
+### Clients
+
+| Method | URI               | Controller                           | Description              |
+| ------ | ----------------- | ------------------------------------ | ------------------------ |
+| POST   | /api/clients      | ClientController\@store              | Create a new client/s    |
+| GET    | /api/clients      | ClientController\@index              | List all clients per user|
+| GET    | /api/clients{id}  | ClientController\@show               | List a client by id      |
+| DELETE | /api/clients{id}  | ClientController\@delete             | Delete a client by id    |
+
+### Appointments
+
+| Method | URI                           | Controller                          | Description                            |
+| ------ | ----------------------------- | ----------------------------------- | -------------------------------------- |
+| GET    | /api/appointments             | AppointmentController\@index        | List all appointments for current user |
+| GET    | /api/appointments/{id}        | AppointmentController\@show         | Get a single appointment               |
+| POST   | /api/appointments             | AppointmentController\@store        | Create appointment (handles timezones) |
+| PUT    | /api/appointments/{id}        | AppointmentController\@update       | Update appointment                     |
+| DELETE | /api/appointments/{id}        | AppointmentController\@delete       | Delete appointment                     |
+| POST   | /api/appointments/{id}/status | AppointmentStatusController\@update | Update status of appointment           |
+
+### Reminders
+
+| Method | URI                              | Controller                | Description                             |
+| ------ | -------------------------------- | ------------------------- | --------------------------------------- |
+| GET    | /api/appointments/{id}/reminders | ReminderController\@index | View reminders linked to an appointment |
+
+---
+
+## 🧪 Sample Appointment Creation
+
+**POST** `/api/appointments`
+
+```json
+[
+  {
+    "client_id": 1,
+    "scheduled_at": "2025-06-25T14:00:00",
+    "notes": "Quarterly review meeting",
+    "repeat": "none",
+    "timezone": "America/New_York"
+  },
+  {
+    "client_id": 2,
+    "scheduled_at": "2025-06-26T09:30:00",
+    "notes": "Initial consultation",
+    "repeat": "weekly",
+    "timezone": "Europe/London"
+  }
+]
+```
+
+---
+
+## 🕓 Reminder Scheduling Logic
+
+Reminders are automatically created for each appointment using configured offsets in `config/reminders.php`. Example:
+
+```php
+'default_offsets' => [
+    '-1 day',
+    '-1 hour',
+],
+```
+
+If a calculated `scheduled_for` time is already in the past, that reminder will **not be created**.
+
+---
+
+## 🧰 Technologies Used
+
+* PHP 8.3 / Laravel 11
+* MySQL
+* Laravel Sanctum
+* Laravel Queues (jobs & workers)
+* Carbon (date/time parsing and timezone handling)
+
+---
+
+## 🔗 Postman Collection
+
+You can test the API using Postman:
+
+- 📁 [Download Postman Collection](postman/2025-06-18-appointment-reminder-system.postman_collection.json)
+- 🌐 [Download Environment File](postman/2025-06-18-appointment-reminder-system.postman_environment.json)
+
+> Import both into Postman to get started quickly.
+
+```
